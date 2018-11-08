@@ -7,7 +7,7 @@ const passport_1 = __importDefault(require("passport"));
 const jwt_simple_1 = __importDefault(require("jwt-simple"));
 const User_1 = __importDefault(require("../models/User"));
 require("../config/passport");
-const request = require("express-validator");
+const server_1 = require("../server");
 exports.getIndex = (req, res) => {
     if (!req.user) {
         return res.redirect("/login");
@@ -33,7 +33,6 @@ exports.getLogin = (req, res) => {
  * Sign in using email and password.
  */
 exports.postLogin = (req, res, next) => {
-    console.log(req.body);
     req.assert("username", "Email is not valid").notEmpty();
     req.assert("password", "Password cannot be blank").notEmpty();
     const errors = req.validationErrors();
@@ -53,6 +52,7 @@ exports.postLogin = (req, res, next) => {
             }
             const token = jwt_simple_1.default.encode(user, "secret");
             console.log(token);
+            req.user = user;
             res.redirect("/");
         });
     })(req, res, next);
@@ -114,5 +114,26 @@ exports.postSignup = (req, res, next) => {
             });
         });
     });
+};
+exports.getAccountByToken = (req, res, next) => {
+    passport_1.default.authenticate("jwt", (err, user) => {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            res.json("User not found with this token!");
+        }
+        req.logIn(user, { session: false }, (err) => {
+            if (err) {
+                return next(err);
+            }
+            const token = jwt_simple_1.default.encode(user, "secret");
+            console.log(token);
+            res.redirect("/");
+        });
+    })(req, res, next);
+};
+exports.getRoom = (req, res) => {
+    res.json(server_1.io.sockets.adapter.rooms);
 };
 //# sourceMappingURL=user.js.map

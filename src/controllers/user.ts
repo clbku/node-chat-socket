@@ -5,8 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import { IVerifyOptions } from "passport-local";
 import { WriteError } from "mongodb";
 import "../config/passport";
-
-const request = require("express-validator");
+import { io } from "../server";
 
 
 export  let getIndex = (req: Request, res: Response) => {
@@ -36,7 +35,6 @@ export let getLogin = (req: Request, res: Response) => {
  * Sign in using email and password.
  */
 export let postLogin = (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
     req.assert("username", "Email is not valid").notEmpty();
     req.assert("password", "Password cannot be blank").notEmpty();
 
@@ -59,6 +57,7 @@ export let postLogin = (req: Request, res: Response, next: NextFunction) => {
             }
             const token = jwt.encode(user, "secret");
             console.log(token);
+            req.user = user;
             res.redirect("/");
 
         });
@@ -151,3 +150,6 @@ export let getAccountByToken = (req: Request, res: Response, next: NextFunction)
 };
 
 
+export let getRoom = (req: Request, res: Response) => {
+    res.json(io.sockets.adapter.rooms);
+};

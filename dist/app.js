@@ -90,5 +90,10 @@ app.post("/login", userController.postLogin);
 app.get("/signup", userController.getSignup);
 app.post("/signup", userController.postSignup);
 app.get("/logout", userController.logout);
+app.get("/api/account", passport_1.default.authenticate("jwt", { session: false }), userController.getAccountByToken);
+/**
+ * App API
+ */
+app.get("/room", passport_1.default.authenticate("jwt", { session: false }), userController.getRoom);
 exports.default = app;
 //# sourceMappingURL=app.js.map

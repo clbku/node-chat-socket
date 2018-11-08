@@ -24,13 +24,13 @@ passport.deserializeUser((id, done) => {
 /**
  * Sign in using Email and Password.
  */
-passport.use(new LocalStrategy({usernameField: "email"}, (email, password, done) => {
-    User.findOne({email: email.toLowerCase()}, (err, user: any) => {
+passport.use(new LocalStrategy({usernameField: "username"}, (username, password, done) => {
+    User.findOne({username: username}, (err, user: any) => {
         if (err) {
             return done(err);
         }
         if (!user) {
-            return done(undefined, false, {message: `Email ${email} not found.`});
+            return done(undefined, false, {message: `User ${username} not found.`});
         }
         user.comparePassword(password, (err: Error, isMatch: boolean) => {
             if (err) {
@@ -39,7 +39,7 @@ passport.use(new LocalStrategy({usernameField: "email"}, (email, password, done)
             if (isMatch) {
                 return done(undefined, user);
             }
-            return done(undefined, false, {message: "Invalid email or password."});
+            return done(undefined, false, {message: "Invalid username or password."});
         });
     });
 }));

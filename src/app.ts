@@ -98,6 +98,9 @@ app.post("/signup", userController.postSignup);
 app.get("/logout", userController.logout);
 app.get("/api/account", passport.authenticate("jwt", {session: false}), userController.getAccountByToken);
 
-
+/**
+ * App API
+ */
+app.get("/room", passport.authenticate("jwt", {session: false}), userController.getRoom);
 
 export default app;
