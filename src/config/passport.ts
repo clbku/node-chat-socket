@@ -50,12 +50,12 @@ const opt = {
 };
 
 passport.use(new JwtStrategy(opt, function (jwtPayload, done) {
-    User.findOne({username: jwtPayload.username}, (err, user: any) => {
+    User.findOne({username: JSON.parse(jwtPayload).user.username}, (err, user: any) => {
         if (err) {
             return done(err);
         }
         if (!user) {
-            return done(undefined, false, {message: `User ${jwtPayload.username} not found.`});
+            return done(undefined, false, {message: `User ${jwtPayload.user.username} not found.`});
         }
         if (user) {
             return done(undefined, user);

@@ -11,9 +11,7 @@ head
         #messages li { padding: 5px 10px; }
         #messages li:nth-child(odd) { background: #eee; }
 input(type="hidden", value=user.username, id="username")
-input(type="text", value=user.username, id="create_room")
-button#create create
-br
+input(type="hidden", value=_token, id="_token")
 select(id="join_room")
 button#join join
 
@@ -22,41 +20,60 @@ div(action='')
     input#m(autocomplete='off')
     button#submit Send
 script(src='/socket.io/socket.io.js')
+script(src='/js/lib/jquery-3.1.1.min.js')
 script.
     var socket = io.connect('http://localhost:3000');
-    document.getElementById('submit').addEventListener("click", function () {
-        let messageBox = document.getElementById('m');
-        let username = document.getElementById("username").value;
-        let room = document.getElementById('join_room').value;
-        socket.emit('chat message', {sender: username, msg: messageBox.value, room: room});
-        messageBox.value = "";
+    $('#submit').click(function () {
+        let messageBox = $('#m');
+        let username = $("#username").val();
+        let room = $('#join_room').val();
+        let _token = $("#_token").val();
+        $.ajax({
+            type: "GET",
+            beforeSend: function (request) {
+                request.setRequestHeader("Authorization", "JWT " + _token);
+            },
+            url: "/authenticate",
+            success: function (code) {
+            }
+        });
+        socket.emit('chat message', {sender: username, msg: messageBox.val(), room: room});
+        messageBox.val("");
         return false;
     });
-    document.getElementById('create').addEventListener("click", function () {
-        let room = document.getElementById('create_room').value;
-        socket.emit('create room', {room: room});
-        return false;
-    });
-    document.getElementById('join').addEventListener("click", function () {
-        let room = document.getElementById('join_room').value;
-        console.log(room);
-        socket.emit('join room', {room: room});
+
+    $('#join').click(function () {
+        let room = $('#join_room').val();
+        let _token = $("#_token").val();
+        $.ajax({
+            type: "GET",
+            beforeSend: function (request) {
+                request.setRequestHeader("Authorization", "JWT " + _token);
+            },
+            url: "/authenticate",
+            success: function (code) {
+                if (code) {
+                    console.log(code);
+                    socket.emit('join room', {token: code, room: room});
+                }
+            }
+        });
         return false;
     });
     socket.on('chat message', function (msg) {
         let data = document.createElement("li");
         data.innerText = msg.sender + ": " + msg.msg;
-        document.getElementById('messages').append(data);
+        $('#messages').append(data);
     });
     socket.on('room', function (rooms) {
         console.log(rooms);
         const keys = Object.keys(rooms);
-        document.getElementById('join_room').innerHTML = "";
+        $('#join_room').innerHTML = "";
         for (let i = 0; i < keys.length; i++) {
             let data = document.createElement("option");
             data.innerText = keys[i];
             data.value = keys[i];
-            document.getElementById('join_room').append(data);
+            $('#join_room').append(data);
         }
 
     });

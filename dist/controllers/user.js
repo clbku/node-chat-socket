@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 const passport_1 = __importDefault(require("passport"));
-const jwt_simple_1 = __importDefault(require("jwt-simple"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
 require("../config/passport");
 const server_1 = require("../server");
@@ -12,8 +12,11 @@ exports.getIndex = (req, res) => {
     if (!req.user) {
         return res.redirect("/login");
     }
+    const token = jsonwebtoken_1.default.sign({ user: req.user }, "secret", { expiresIn: 60 * 60 });
+    console.log(token);
     res.render("index", {
-        title: "chat"
+        title: "chat",
+        _token: JSON.stringify(token)
     });
 };
 /**
@@ -50,8 +53,6 @@ exports.postLogin = (req, res, next) => {
             if (err) {
                 return next(err);
             }
-            const token = jwt_simple_1.default.encode(user, "secret");
-            console.log(token);
             req.user = user;
             res.redirect("/");
         });
@@ -108,8 +109,6 @@ exports.postSignup = (req, res, next) => {
                 if (err) {
                     return next(err);
                 }
-                const token = jwt_simple_1.default.encode(user, "secret");
-                console.log(token);
                 res.redirect("/");
             });
         });
@@ -127,7 +126,7 @@ exports.getAccountByToken = (req, res, next) => {
             if (err) {
                 return next(err);
             }
-            const token = jwt_simple_1.default.encode(user, "secret");
+            const token = jsonwebtoken_1.default.sign(user, "secret", { expiresIn: 60 * 60 });
             console.log(token);
             res.redirect("/");
         });
@@ -135,5 +134,18 @@ exports.getAccountByToken = (req, res, next) => {
 };
 exports.getRoom = (req, res) => {
     res.json(server_1.io.sockets.adapter.rooms);
+};
+exports.getJoinToken = (req, res) => {
+    passport_1.default.authenticate("jwt", (err, user) => {
+        if (err) {
+            return res.status(400).json("Bad request!");
+        }
+        if (!user) {
+            return res.status(404).json("User not found with this token!");
+        }
+        const code = jsonwebtoken_1.default.sign({ req: "join", userInfo: user }, "join-secret", { expiresIn: "1h" });
+        console.log(code);
+        return res.status(200).json({ code: code });
+    })(req, res);
 };
 //# sourceMappingURL=user.js.map

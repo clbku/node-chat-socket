@@ -1,19 +1,23 @@
 import passport from "passport";
-import jwt from "jwt-simple";
+import jwt from "jsonwebtoken";
 import { default as User, UserModel } from "../models/User";
 import { Request, Response, NextFunction } from "express";
 import { IVerifyOptions } from "passport-local";
 import { WriteError } from "mongodb";
 import "../config/passport";
 import { io } from "../server";
+import crypto from "crypto-js";
 
 
 export  let getIndex = (req: Request, res: Response) => {
     if (!req.user) {
         return res.redirect("/login");
     }
+    const token = jwt.sign({user: req.user}, "secret", { expiresIn: 60 * 60 });
+    console.log(token);
     res.render("index", {
-        title: "chat"
+        title: "chat",
+        _token: JSON.stringify(token)
     });
 };
 
@@ -55,8 +59,6 @@ export let postLogin = (req: Request, res: Response, next: NextFunction) => {
             if (err) {
                 return next(err);
             }
-            const token = jwt.encode(user, "secret");
-            console.log(token);
             req.user = user;
             res.redirect("/");
 
@@ -120,8 +122,6 @@ export let postSignup = (req: Request, res: Response, next: NextFunction) => {
                 if (err) {
                     return next(err);
                 }
-                const token = jwt.encode(user, "secret");
-                console.log(token);
                 res.redirect("/");
             });
         });
@@ -141,7 +141,7 @@ export let getAccountByToken = (req: Request, res: Response, next: NextFunction)
             if (err) {
                 return next(err);
             }
-            const token = jwt.encode(user, "secret");
+            const token = jwt.sign(user, "secret", { expiresIn: 60 * 60 });
             console.log(token);
             res.redirect("/");
 
@@ -152,4 +152,18 @@ export let getAccountByToken = (req: Request, res: Response, next: NextFunction)
 
 export let getRoom = (req: Request, res: Response) => {
     res.json(io.sockets.adapter.rooms);
+};
+
+export let getJoinToken = (req: Request, res: Response) => {
+    passport.authenticate("jwt", (err: Error, user: UserModel) => {
+        if (err) {
+            return res.status(400).json("Bad request!");
+        }
+        if (!user) {
+            return res.status(404).json("User not found with this token!");
+        }
+        const code = jwt.sign({req: "join", userInfo: user}, "join-secret", { expiresIn : "1h" });
+        console.log(code);
+        return res.status(200).json({code: code});
+    })(req, res);
 };

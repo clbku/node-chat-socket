@@ -1,6 +1,8 @@
 import errorHandler from "errorhandler";
 import app from "./app";
 import SocketIO from "socket.io";
+import crypto from  "crypto-js";
+import jwt from "jsonwebtoken";
 
 
 
@@ -24,17 +26,22 @@ const server = app.listen(app.get("port"), () => {
 export const io = SocketIO.listen(server);
 
 io.on("connection", function(socket) {
+    const rooms = io.sockets.adapter.rooms;
+    io.emit("room", rooms);
     socket.on("chat message", function(msg) {
         console.log(socket.rooms);
         io.to(msg.room).emit("chat message", msg);
     });
-    socket.on("join room", function(room) {
-        socket.join(room.room);
-    });
-    socket.on("create room", function(room) {
-        socket.join(room.room);
-        const rooms = io.sockets.adapter.rooms;
-        io.emit("room", rooms);
+    socket.on("join room", function(data) {
+        // @ts-ignore
+        jwt.verify(data.token, "join-secret", function (err) {
+            if (err) {
+                socket.emit("authenticate", {msg: "Authenticate failed!"});
+            }
+            else {
+                socket.join(data.room);
+            }
+        });
     });
 });
 

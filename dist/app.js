@@ -95,5 +95,6 @@ app.get("/api/account", passport_1.default.authenticate("jwt", { session: false 
  * App API
  */
 app.get("/room", passport_1.default.authenticate("jwt", { session: false }), userController.getRoom);
+app.get("/authenticate", userController.getJoinToken);
 exports.default = app;
 //# sourceMappingURL=app.js.map

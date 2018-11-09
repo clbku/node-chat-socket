@@ -46,12 +46,12 @@ const opt = {
     secretOrKey: "secret"
 };
 passport_1.default.use(new passport_jwt_1.Strategy(opt, function (jwtPayload, done) {
-    User_1.default.findOne({ username: jwtPayload.username }, (err, user) => {
+    User_1.default.findOne({ username: JSON.parse(jwtPayload).user.username }, (err, user) => {
         if (err) {
             return done(err);
         }
         if (!user) {
-            return done(undefined, false, { message: `User ${jwtPayload.username} not found.` });
+            return done(undefined, false, { message: `User ${jwtPayload.user.username} not found.` });
         }
         if (user) {
             return done(undefined, user);

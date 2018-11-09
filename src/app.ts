@@ -102,5 +102,6 @@ app.get("/api/account", passport.authenticate("jwt", {session: false}), userCont
  * App API
  */
 app.get("/room", passport.authenticate("jwt", {session: false}), userController.getRoom);
+app.get("/authenticate", userController.getJoinToken);
 
 export default app;
